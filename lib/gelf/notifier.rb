@@ -18,7 +18,7 @@ module GELF
 
       self.level = GELF::DEBUG
       self.max_chunk_size = max_size
-      self.is_tcp = default_options['is_tcp']
+      @is_tcp = default_options['is_tcp']
 
       self.default_options = default_options
       self.default_options['version'] = SPEC_VERSION
@@ -26,7 +26,7 @@ module GELF
       self.default_options['level'] ||= GELF::UNKNOWN
       self.default_options['facility'] ||= 'gelf-rb'
 
-      @sender = (is_tcp? ? RubyTcpSender : RubyUdpSender).new([[host, port]])
+      @sender = (is_tcp ? RubyTcpSender : RubyUdpSender).new([[host, port]])
       self.level_mapping = :logger
     end
 
