@@ -31,9 +31,9 @@ module GELF
       end
 
       @addresses.each do |host, port|
-        TCPSocket.new(host, port).tap do |socket|
+        TCPSocket.open(host, port) do |socket|
           socket.send(datagrams[0], 0)
-        end.close
+        end
       end rescue :failed
     end
   end
