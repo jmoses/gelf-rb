@@ -48,10 +48,20 @@ class TestRubyUdpSender < Test::Unit::TestCase
 
         before_should "send to the server then close the socket" do
           socket = mock("socket")
-          socket.expects(:send).with(:datagram).twice
+          socket.expects(:send).with(:datagram, 0).twice
           socket.expects(:close).twice
-          TCPSocket.any_instance.expects(:new).with('localhost', 12201).returns(socket)
-          TCPSocket.any_instance.expects(:new).with('localhost', 12202).returns(socket)
+          TCPSocket.expects(:new).with('localhost', 12201).returns(socket)
+          TCPSocket.expects(:new).with('localhost', 12202).returns(socket)
+        end
+      end
+
+      context "failing to deliver" do
+        setup do
+          TCPSocket.expects(:new).raises(ArgumentError)
+        end
+
+        should "just return failed" do
+          assert_equal :failed, @sender.send_datagrams([:datagram])
         end
       end
     end
