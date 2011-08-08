@@ -17,4 +17,24 @@ module GELF
       end
     end
   end
+
+  class RubyTcpSender
+    attr_accessor :addresses
+
+    def initialize(addresses)
+      @addresses = addresses
+    end
+
+    def send_datagrams( datagrams )
+      unless datagrams.size == 1
+        raise ArgumentError.new("TCP sending only supports one datagram.")
+      end
+
+      @addresses.each do |host, port|
+        TCPSocket.new(host, port).tap do |socket|
+          socket.send(datagrams[0])
+        end.close
+      end
+    end
+  end
 end

@@ -25,4 +25,39 @@ class TestRubyUdpSender < Test::Unit::TestCase
       end
     end
   end
+  
+  context "with ruby tcp sender" do
+    setup do
+      @addresses = [['localhost', 12201], ['localhost', 12202]]
+      @sender = GELF::RubyTcpSender.new(@addresses)
+      @datagrams1 = %w(d1 d2 d3)
+      @datagrams2 = %w(e1 e2 e3)
+    end
+
+    context "send_datagrams" do
+      context "with more than one" do
+        should "raise an error" do
+          assert_raises(ArgumentError) { @sender.send_datagrams(['a', 'b'])}
+        end
+      end
+
+      context "with only one" do
+        setup do
+          @sender.send_datagrams([:datagram])
+        end
+
+        before_should "send to the server then close the socket" do
+          socket = mock("socket")
+          socket.expects(:send).with(:datagram).twice
+          socket.expects(:close).twice
+          TCPSocket.any_instance.expects(:new).with('localhost', 12201).returns(socket)
+          TCPSocket.any_instance.expects(:new).with('localhost', 12202).returns(socket)
+        end
+      end
+    end
+
+     
+
+
+  end
 end

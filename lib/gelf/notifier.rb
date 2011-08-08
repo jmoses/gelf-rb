@@ -7,7 +7,7 @@ module GELF
     end
 
     attr_accessor :enabled, :collect_file_and_line
-    attr_reader :max_chunk_size, :level, :default_options, :level_mapping
+    attr_reader :max_chunk_size, :level, :default_options, :level_mapping, :is_tcp
 
     # +host+ and +port+ are host/ip and port of graylog2-server.
     # +max_size+ is passed to max_chunk_size=.
@@ -18,6 +18,7 @@ module GELF
 
       self.level = GELF::DEBUG
       self.max_chunk_size = max_size
+      self.is_tcp = default_options['is_tcp']
 
       self.default_options = default_options
       self.default_options['version'] = SPEC_VERSION
@@ -25,7 +26,7 @@ module GELF
       self.default_options['level'] ||= GELF::UNKNOWN
       self.default_options['facility'] ||= 'gelf-rb'
 
-      @sender = RubyUdpSender.new([[host, port]])
+      @sender = (is_tcp? ? RubyTcpSender : RubyUdpSender).new([[host, port]])
       self.level_mapping = :logger
     end
 
@@ -204,7 +205,7 @@ module GELF
       datagrams = []
 
       # Maximum total size is 8192 byte for UDP datagram. Split to chunks if bigger. (GELFv2 supports chunking)
-      if data.count > @max_chunk_size
+      if !is_tcp && data.count > @max_chunk_size
         id = self.class.last_chunk_id += 1
         msg_id = Digest::MD5.digest("#{Time.now.to_f}-#{id}")[0, 8]
         num, count = 0, (data.count.to_f / @max_chunk_size).ceil
